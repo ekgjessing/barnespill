@@ -836,8 +836,8 @@ function renderRound() {
     } else if (round.mode === 'match') {
       speak(d.upper + ' – ' + d.lower);
     } else {
-      // quiz: bare bokstavnavnet
-      speak('Bokstaven ' + d.upper);
+      var optWords = round.options.map(function(o) { return o.word; });
+      speak('Bokstaven ' + d.upper + '. ' + optWords[0] + ', ' + optWords[1] + ', eller ' + optWords[2] + '?');
     }
   }, 600);
 }
@@ -942,8 +942,8 @@ document.getElementById('letter-pair').addEventListener('click', function() {
     // Find: kortet viser bildet, si ordet
     speak(round.word ? round.word.word : d.upper);
   } else {
-    // Quiz: si bare bokstavnavnet – ikke avsløre ordet!
-    speak('Bokstaven ' + d.upper);
+    var optWords = round.options.map(function(o) { return o.word; });
+    speak('Bokstaven ' + d.upper + '. ' + optWords[0] + ', ' + optWords[1] + ', eller ' + optWords[2] + '?');
   }
 });
 document.getElementById('letter-pair').addEventListener('keydown', function(e) {
