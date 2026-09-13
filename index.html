@@ -889,6 +889,8 @@ function handleAnswer(btn, opt, d, mode, w) {
       wrongSpeech = opt.letter + '. Nei, prøv igjen!';
     } else {
       hint = 'Prøv igjen! Hint: ' + (w ? w.word : '') + ' 🤔';
+      var firstLetter = opt.word.charAt(0).toUpperCase();
+      wrongSpeech = opt.word + '. Nei, ' + opt.word + ' starter med ' + firstLetter + '. Prøv igjen!';
     }
     fb.textContent = hint;
     fb.className   = 'feedback wrong';
