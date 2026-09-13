@@ -101,6 +101,23 @@
       display: none;
     }
 
+    #soundboard-screen {
+      position: fixed; inset: 0; z-index: 400;
+      background: var(--clr-bg);
+      padding: 24px;
+      overflow-y: auto;
+      display: none;
+    }
+    .soundboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 15px;
+      max-width: 900px;
+      margin: 0 auto;
+      padding-top: 20px;
+      padding-bottom: 50px;
+    }
+
     .mode-logo {
       font-size: 3rem;
       font-weight: 800;
@@ -754,6 +771,16 @@
         <div class="mode-card-title">Finn bokstaven!</div>
         <div class="mode-card-desc">Se et bilde og et ord – velg riktig stor bokstav blant tre!</div>
       </div>
+      <div class="mode-card" id="mc-soundboard" onclick="selectMode('soundboard')">
+        <div class="mode-card-icon">👆</div>
+        <div class="mode-card-title">Lydbrett</div>
+        <div class="mode-card-desc">Trykk på alle bokstavene for å høre hvordan de uttales! (Fri lek)</div>
+      </div>
+      <div class="mode-card" id="mc-listen" onclick="selectMode('listen')">
+        <div class="mode-card-icon">🔊</div>
+        <div class="mode-card-title">Lytte-quiz</div>
+        <div class="mode-card-desc">Hør bokstaven som sies og finn den riktige blant valgene!</div>
+      </div>
     </div>
 
     <div
@@ -763,6 +790,17 @@
     </div>
 
     <button id="start-btn" onclick="launchGame()">Start spillet! 🚀</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+     SOUNDBOARD SCREEN
+═══════════════════════════════════════════════ -->
+  <div id="soundboard-screen" style="display:none;">
+    <header>
+      <div class="logo">Lydbrett 🐣</div>
+      <button class="back-btn" onclick="goHome()">Tilbake</button>
+    </header>
+    <div id="soundboard-grid" class="soundboard-grid"></div>
   </div>
 
   <!-- ══════════════════════════════════════════════
@@ -1090,13 +1128,49 @@
       document.getElementById('mc-quiz').classList.toggle('active', mode === 'quiz');
       document.getElementById('mc-match').classList.toggle('active', mode === 'match');
       document.getElementById('mc-find').classList.toggle('active', mode === 'find');
+      var mcSound = document.getElementById('mc-soundboard');
+      if (mcSound) mcSound.classList.toggle('active', mode === 'soundboard');
+      var mcListen = document.getElementById('mc-listen');
+      if (mcListen) mcListen.classList.toggle('active', mode === 'listen');
     }
 
     function launchGame() {
       var toggle = document.getElementById('level2-toggle');
       if (toggle) isLevel2 = toggle.checked;
       document.getElementById('mode-screen').classList.add('hidden');
-      startGame();
+      
+      if (gameMode === 'soundboard') {
+        document.getElementById('soundboard-screen').style.display = 'block';
+        document.getElementById('app').style.display = 'none';
+        initSoundboard();
+      } else {
+        document.getElementById('soundboard-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        startGame();
+      }
+    }
+
+    function initSoundboard() {
+      var grid = document.getElementById('soundboard-grid');
+      grid.innerHTML = '';
+      ALL_LETTERS.forEach(function(d) {
+        var btn = document.createElement('button');
+        btn.className = 'option-btn is-letter';
+        btn.innerHTML = '<span class="option-letter" style="color:var(--clr-purple)">' + d.upper + '</span>';
+        btn.addEventListener('click', function() {
+          speak('Bokstaven ' + d.upper);
+          btn.style.transform = 'scale(0.9)';
+          setTimeout(function() { btn.style.transform = ''; }, 150);
+        });
+        grid.appendChild(btn);
+      });
+    }
+
+    function goHome() {
+      document.getElementById('soundboard-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('celebration').classList.add('hidden');
+      document.getElementById('mode-screen').classList.remove('hidden');
     }
 
     /* ═══════════════════════════════════════════════
@@ -1164,6 +1238,15 @@
           { letter: d.upper, word: d.upper, correct: true },
           { letter: d.letterLures[0], word: d.letterLures[0], correct: false },
           { letter: d.letterLures[1], word: d.letterLures[1], correct: false },
+    }
+
+    function buildListenRound(d) {
+      return {
+        data: d, mode: 'listen',
+        options: shuffle([
+          { letter: d.upper, word: d.upper, correct: true },
+          { letter: d.letterLures[0], word: d.letterLures[0], correct: false },
+          { letter: d.letterLures[1], word: d.letterLures[1], correct: false },
         ])
       };
     }
@@ -1205,6 +1288,10 @@
         tag.textContent = 'Match' + (isLevel2 ? ' Nivå 2' : ''); tag.className = 'mode-tag match';
         document.getElementById('card-instruction').textContent = isLevel2 ? 'Hvilken? Skriv på tastaturet! ⌨️' : 'Trykk for å høre begge! 🔊';
         document.getElementById('question').textContent = 'Finn den lille versjonen av ' + d.upper + ' !';
+      } else if (round.mode === 'listen') {
+        tag.textContent = 'Lytte' + (isLevel2 ? ' Nivå 2' : ''); tag.className = 'mode-tag listen';
+        document.getElementById('card-instruction').textContent = isLevel2 ? 'Hvilken bokstav? Skriv på tastaturet! ⌨️' : 'Trykk for å høre lyden! 🔊';
+        document.getElementById('question').textContent = 'Hvilken bokstav hører du?';
       } else if (round.mode === 'find') {
         tag.textContent = 'Finn' + (isLevel2 ? ' Nivå 2' : ''); tag.className = 'mode-tag find';
         document.getElementById('card-instruction').textContent = isLevel2 ? 'Hvilken bokstav? Skriv på tastaturet! ⌨️' : 'Trykk for å høre bokstaven! 🔊';
@@ -1227,7 +1314,7 @@
       var letterCard = document.getElementById('letter-pair').parentNode;
       var findPic = document.getElementById('find-picture');
 
-      if (round.mode === 'find') {
+      if (round.mode === 'find' || round.mode === 'listen') {
         // Show the emoji+word prominently above instead of the letter pair
         document.getElementById('letter-pair').style.display = 'none';
         document.querySelector('.letter-label').style.display = 'none';
@@ -1237,11 +1324,15 @@
           findPic.style.cssText = 'font-size:clamp(4rem,16vw,7rem);text-align:center;line-height:1;margin:4px 0';
           letterCard.insertBefore(findPic, document.querySelector('.speak-hint'));
         }
-        if (isLevel2) {
-          findPic.innerHTML = '<div style="font-size:clamp(4rem,16vw,7rem)">' + (w ? w.emoji : '') + '</div>';
+        if (round.mode === 'listen') {
+          findPic.innerHTML = '<div style="font-size:clamp(4rem,16vw,7rem); cursor:pointer;" onclick="speak(\'Hvor er bokstaven ' + d.upper + '?\')">🔊</div>';
         } else {
-          findPic.innerHTML = '<div style="font-size:clamp(4rem,16vw,7rem)">' + (w ? w.emoji : '') + '</div>' +
-            '<div style="font-size:1.3rem;font-weight:800;color:#3A2D6B;margin-top:4px">' + (w ? w.word : '') + '</div>';
+          if (isLevel2) {
+            findPic.innerHTML = '<div style="font-size:clamp(4rem,16vw,7rem)">' + (w ? w.emoji : '') + '</div>';
+          } else {
+            findPic.innerHTML = '<div style="font-size:clamp(4rem,16vw,7rem)">' + (w ? w.emoji : '') + '</div>' +
+              '<div style="font-size:1.3rem;font-weight:800;color:#3A2D6B;margin-top:4px">' + (w ? w.word : '') + '</div>';
+          }
         }
         findPic.style.display = '';
       } else {
@@ -1278,7 +1369,9 @@
       // I match-modus si begge formene (F – f).
       // I finn-modus si ordet (bildet er vist, barnet skal finne bokstaven).
       setTimeout(function () {
-        if (round.mode === 'find' && w) {
+        if (round.mode === 'listen') {
+          speak('Hvor er bokstaven ' + d.upper + '?');
+        } else if (round.mode === 'find' && w) {
           speak(w.word);
         } else if (round.mode === 'match') {
           speak(d.upper + ' – ' + d.lower);
@@ -1314,6 +1407,8 @@
 
         if (mode === 'match') {
           speak(opt.letter + '! Ja! Den store ' + d.upper + ' og den lille ' + d.lower + ' er samme bokstav! ' + praise);
+        } else if (mode === 'listen') {
+          speak(opt.letter + '! Ja! Det er bokstaven ' + d.upper + '! ' + praise);
         } else if (mode === 'find') {
           speak(opt.letter + '! Ja! ' + (w ? w.word : '') + ' starter med bokstaven ' + d.upper + '! ' + praise);
         } else {
@@ -1330,6 +1425,9 @@
         var wrongSpeech = 'Nei, prøv igjen!';
         if (mode === 'match') {
           hint = 'Prøv igjen! Den lille ' + d.lower + ' hører til ' + d.upper + ' 🤔';
+          wrongSpeech = opt.letter + '. Nei, prøv igjen!';
+        } else if (mode === 'listen') {
+          hint = 'Prøv igjen! Du leter etter bokstaven ' + d.upper + ' 🤔';
           wrongSpeech = opt.letter + '. Nei, prøv igjen!';
         } else if (mode === 'find') {
           hint = 'Prøv igjen! Bokstaven er ' + d.upper + ' 🤔';
@@ -1387,6 +1485,8 @@
       } else if (round.mode === 'find') {
         // Find: kortet viser bildet, si ordet
         speak(round.word ? round.word.word : d.upper);
+      } else if (round.mode === 'listen') {
+        speak('Hvor er bokstaven ' + d.upper + '?');
       } else {
         var optWords = round.options.map(function (o) { return o.word; });
         speak('Bokstaven ' + d.upper + '. ' + optWords[0] + ', ' + optWords[1] + ', eller ' + optWords[2] + '?');
@@ -1487,6 +1587,7 @@
       queue = picked.map(function (d) {
         if (gameMode === 'match') return buildMatchRound(d);
         if (gameMode === 'find') return buildFindRound(d);
+        if (gameMode === 'listen') return buildListenRound(d);
         return buildQuizRound(d);
       });
 
