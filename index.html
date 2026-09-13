@@ -107,13 +107,38 @@
       padding: 24px;
       overflow-y: auto;
       display: none;
+      flex-direction: column;
+      align-items: center;
     }
+    #soundboard-screen header {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .back-btn {
+      background: linear-gradient(135deg, var(--clr-purple), var(--clr-pink));
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 10px 28px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(155, 93, 229, .35);
+      transition: transform var(--ease-pop);
+    }
+    .back-btn:hover { transform: scale(1.06); }
+    .back-btn:active { transform: scale(.95); }
     .soundboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
       gap: 15px;
+      width: 100%;
       max-width: 900px;
-      margin: 0 auto;
       padding-top: 20px;
       padding-bottom: 50px;
     }
@@ -1140,7 +1165,7 @@
       document.getElementById('mode-screen').classList.add('hidden');
       
       if (gameMode === 'soundboard') {
-        document.getElementById('soundboard-screen').style.display = 'block';
+        document.getElementById('soundboard-screen').style.display = 'flex';
         document.getElementById('app').style.display = 'none';
         initSoundboard();
       } else {
@@ -1169,7 +1194,7 @@
     function goHome() {
       document.getElementById('soundboard-screen').style.display = 'none';
       document.getElementById('app').style.display = 'none';
-      document.getElementById('celebration').classList.add('hidden');
+      document.getElementById('celebration').classList.remove('show');
       document.getElementById('mode-screen').classList.remove('hidden');
     }
 
