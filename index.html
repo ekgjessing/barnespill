@@ -866,30 +866,33 @@ function handleAnswer(btn, opt, d, mode, w) {
     }
 
     if (mode === 'match') {
-      speak('Ja! Den store ' + d.upper + ' og den lille ' + d.lower + ' er samme bokstav! ' + praise);
+      speak(opt.letter + '! Ja! Den store ' + d.upper + ' og den lille ' + d.lower + ' er samme bokstav! ' + praise);
     } else if (mode === 'find') {
-      speak('Ja! ' + (w ? w.word : '') + ' starter med bokstaven ' + d.upper + '! ' + praise);
+      speak(opt.letter + '! Ja! ' + (w ? w.word : '') + ' starter med bokstaven ' + d.upper + '! ' + praise);
     } else {
       speak('Ja! ' + (w ? w.word : '') + ' starter med ' + d.upper + '! ' + praise);
     }
 
     launchConfetti(80);
     setTimeout(function() { document.getElementById('next-btn').classList.add('show'); }, 800);
-    autoNextTimeout = setTimeout(nextRound, 3500);
+    autoNextTimeout = setTimeout(nextRound, 5500);
 
   } else {
     btn.classList.add('wrong');
     var hint;
+    var wrongSpeech = 'Nei, prøv igjen!';
     if (mode === 'match') {
       hint = 'Prøv igjen! Den lille ' + d.lower + ' hører til ' + d.upper + ' 🤔';
+      wrongSpeech = opt.letter + '. Nei, prøv igjen!';
     } else if (mode === 'find') {
       hint = 'Prøv igjen! Bokstaven er ' + d.upper + ' 🤔';
+      wrongSpeech = opt.letter + '. Nei, prøv igjen!';
     } else {
       hint = 'Prøv igjen! Hint: ' + (w ? w.word : '') + ' 🤔';
     }
     fb.textContent = hint;
     fb.className   = 'feedback wrong';
-    speak('Nei, prøv igjen!');
+    speak(wrongSpeech);
     setTimeout(function() {
       answered = false;
       document.querySelectorAll('.option-btn:not(.wrong)').forEach(function(b) { b.disabled = false; });
