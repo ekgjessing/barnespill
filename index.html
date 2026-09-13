@@ -1347,7 +1347,7 @@
         var btn = document.createElement('button');
         btn.id = 'opt-' + i;
 
-        if (round.mode === 'match' || round.mode === 'find') {
+        if (round.mode === 'match' || round.mode === 'find' || round.mode === 'listen') {
           btn.className = 'option-btn is-letter';
           btn.innerHTML = '<span class="option-letter ' + colorCls + '">' + opt.letter + '</span>';
           btn.setAttribute('aria-label', 'Bokstav ' + opt.letter);
