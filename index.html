@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOKSTAV – Lær bokstavene!</title>
+  <meta name="description" content="Et morsomt bokstavspill for barn på 3–4 år. Lær norske bokstaver med bilder og lyder!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --clr-bg:      #FFF8F0;
+      --clr-sky:     #6EC6F5;
+      --clr-sun:     #FFD93D;
+      --clr-pink:    #FF8FAB;
+      --clr-green:   #6BCB77;
+      --clr-purple:  #9B5DE5;
+      --clr-orange:  #FF8C42;
+      --clr-card:    #FFFFFF;
+      --clr-shadow:  rgba(0,0,0,.12);
+      --clr-text:    #3A2D6B;
+      --clr-correct: #6BCB77;
+      --clr-wrong:   #FF6B6B;
+      --radius:      28px;
+      --ease-pop:    .25s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    html, body { height: 100%; font-family: 'Baloo 2', sans-serif; background: var(--clr-bg); color: var(--clr-text); overflow-x: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse at 10% 20%, #FFE0B2 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 80%, #E1BEE7 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, #B3E5FC 0%, transparent 70%);
+    }
+
+    /* ── Floating decos ── */
+    .deco { position: fixed; font-size: 2rem; opacity: .15; pointer-events: none; user-select: none; z-index: 0; animation: floatDeco 6s ease-in-out infinite; }
+    @keyframes floatDeco { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-18px) rotate(8deg); } }
+
+    /* ═══════════════════════════════════════
+       MODE SELECT SCREEN
+    ═══════════════════════════════════════ */
+    #mode-screen {
+      position: fixed; inset: 0; z-index: 500;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 24px; padding: 24px; text-align: center;
+      background: var(--clr-bg);
+      animation: fadeIn .4s ease;
+    }
+    #mode-screen.hidden { display: none; }
+
+    .mode-logo {
+      font-size: 3rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--clr-purple), var(--clr-pink), var(--clr-orange));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .mode-sub { font-size: 1.1rem; font-weight: 600; color: #7B68C8; max-width: 340px; line-height: 1.4; }
+
+    .mode-cards { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+
+    .mode-card {
+      background: var(--clr-card); border: 3px solid transparent; border-radius: var(--radius);
+      padding: 24px 20px; width: 210px; cursor: pointer;
+      box-shadow: 0 8px 28px var(--clr-shadow);
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      transition: transform var(--ease-pop), border-color .2s, box-shadow .2s;
+    }
+    .mode-card:hover { transform: translateY(-8px) scale(1.04); box-shadow: 0 18px 36px rgba(0,0,0,.18); }
+    .mode-card:active { transform: scale(.95); }
+    .mode-card.active { border-color: var(--clr-purple); background: #F5F0FF; }
+
+    .mode-card-icon { font-size: 3.5rem; }
+    .mode-card-title { font-size: 1.1rem; font-weight: 800; color: var(--clr-text); }
+    .mode-card-desc { font-size: .85rem; font-weight: 600; color: #8E82C0; line-height: 1.3; }
+
+    #start-btn {
+      background: linear-gradient(135deg, var(--clr-purple), var(--clr-pink));
+      color: #fff; border: none; border-radius: 50px; padding: 16px 48px;
+      font-family: inherit; font-size: 1.4rem; font-weight: 800; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(155,93,229,.4); transition: transform var(--ease-pop);
+    }
+    #start-btn:hover  { transform: scale(1.07); }
+    #start-btn:active { transform: scale(.96); }
+
+    /* ═══════════════════════════════════════
+       GAME LAYOUT
+    ═══════════════════════════════════════ */
+    #app {
+      position: relative; z-index: 1; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 12px 32px; gap: 14px;
+    }
+
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; max-width: 600px;
+    }
+
+    .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, var(--clr-purple), var(--clr-pink), var(--clr-orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -1px; }
+
+    .stars-counter { display: flex; align-items: center; gap: 6px; background: var(--clr-sun); border-radius: 50px; padding: 6px 16px; font-weight: 800; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(255,217,61,.4); }
+
+    .mode-tag { font-size: .78rem; font-weight: 800; padding: 4px 12px; border-radius: 50px; letter-spacing: .5px; text-transform: uppercase; }
+    .mode-tag.quiz  { background: #EDE7FF; color: var(--clr-purple); }
+    .mode-tag.match { background: #FFF0F9; color: #D63FAC; }
+    .mode-tag.find  { background: #FFF4E0; color: #D07000; }
+
+    .progress-wrap { width: 100%; max-width: 600px; background: rgba(255,255,255,.6); border-radius: 50px; height: 14px; overflow: hidden; box-shadow: inset 0 2px 6px var(--clr-shadow); }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, var(--clr-purple), var(--clr-pink)); border-radius: 50px; transition: width .6s ease; }
+
+    /* ── Letter card ── */
+    .letter-card {
+      background: var(--clr-card); border-radius: var(--radius);
+      box-shadow: 0 12px 40px var(--clr-shadow); padding: 16px 24px;
+      text-align: center; width: 100%; max-width: 600px; position: relative; overflow: hidden;
+    }
+    .letter-card::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(135deg, rgba(155,93,229,.07) 0%, rgba(255,143,171,.07) 50%, rgba(107,203,119,.05) 100%);
+    }
+
+    .instruction { font-size: .95rem; font-weight: 600; color: #7B68C8; margin-bottom: 4px; }
+
+    /* ── Letter pair display (Aa) ── */
+    .letter-pair {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      cursor: pointer; user-select: none;
+      transition: transform var(--ease-pop);
+    }
+    .letter-pair:hover { transform: scale(1.05); }
+    .letter-pair:active { transform: scale(.95); }
+
+    .letter-big {
+      font-size: clamp(5rem, 18vw, 8rem); font-weight: 800; line-height: 1;
+      filter: drop-shadow(0 6px 14px rgba(155,93,229,.3));
+      transition: transform var(--ease-pop);
+    }
+
+    .letter-divider {
+      width: 3px; height: clamp(60px, 14vw, 96px);
+      background: linear-gradient(to bottom, transparent, #DDD, transparent);
+      border-radius: 4px; flex-shrink: 0;
+    }
+
+    /* Small letter pulses in on load to show its connection to the big one */
+    .letter-small {
+      font-size: clamp(3rem, 10vw, 5rem); font-weight: 800; line-height: 1;
+      opacity: .65; filter: drop-shadow(0 4px 8px rgba(155,93,229,.2));
+      animation: smallPop .6s var(--ease-pop) forwards;
+    }
+
+    @keyframes smallPop {
+      0%   { opacity: 0; transform: scale(.4) translateX(-20px); }
+      60%  { opacity: .8; transform: scale(1.15) translateX(4px); }
+      100% { opacity: .65; transform: scale(1) translateX(0); }
+    }
+
+    .letter-label {
+      display: flex; justify-content: center; gap: 40px;
+      font-size: .72rem; font-weight: 800; color: #B0A5D8; letter-spacing: 1px;
+      text-transform: uppercase; margin-top: 2px;
+    }
+
+    .speak-hint { font-size: .82rem; color: #C0B5DE; font-weight: 600; margin-top: 4px; }
+
+    /* colour classes */
+    .lc-0 { color: #9B5DE5; }
+    .lc-1 { color: #FF8FAB; }
+    .lc-2 { color: #FF8C42; }
+    .lc-3 { color: #6BCB77; }
+    .lc-4 { color: #6EC6F5; }
+
+    /* ── Question ── */
+    .question { font-size: 1.2rem; font-weight: 800; color: var(--clr-text); text-align: center; max-width: 600px; line-height: 1.3; }
+
+    /* ── Options grid ── */
+    .options-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      width: 100%; max-width: 600px;
+    }
+
+    .option-btn {
+      background: var(--clr-card); border: 3px solid transparent; border-radius: var(--radius);
+      padding: 14px 8px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      box-shadow: 0 6px 20px var(--clr-shadow); -webkit-tap-highlight-color: transparent; outline: none;
+      transition: transform var(--ease-pop), border-color .2s, box-shadow .2s;
+    }
+    .option-btn:hover:not(:disabled) { transform: translateY(-6px) scale(1.05); box-shadow: 0 14px 32px rgba(0,0,0,.18); }
+    .option-btn:active:not(:disabled) { transform: scale(.93); }
+
+    .option-emoji { font-size: clamp(2.8rem, 11vw, 4.2rem); line-height: 1; }
+    .option-letter { font-size: clamp(2.8rem, 11vw, 4.2rem); line-height: 1; font-weight: 800; }
+    .option-label { font-size: clamp(.82rem, 3vw, 1.05rem); font-weight: 800; color: var(--clr-text); text-align: center; }
+
+    .option-btn.correct { border-color: var(--clr-correct); background: #F0FFF4; animation: correctPop var(--ease-pop) forwards; }
+    .option-btn.wrong   { border-color: var(--clr-wrong);   background: #FFF0F0; animation: shake .4s ease; }
+    .option-btn:disabled { cursor: default; }
+
+    @keyframes correctPop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.14) rotate(3deg); }
+      100% { transform: scale(1.06); }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+
+    /* ── Feedback ── */
+    .feedback { font-size: 1.45rem; font-weight: 800; text-align: center; min-height: 2rem; transition: opacity .3s; }
+    .feedback.correct { color: var(--clr-correct); }
+    .feedback.wrong   { color: var(--clr-wrong); }
+    .feedback.hidden  { opacity: 0; }
+
+    /* ── Next button ── */
+    #next-btn {
+      background: linear-gradient(135deg, var(--clr-purple), var(--clr-pink));
+      color: #fff; border: none; border-radius: 50px; padding: 15px 38px;
+      font-family: inherit; font-size: 1.25rem; font-weight: 800; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(155,93,229,.4); display: none; letter-spacing: .5px;
+      transition: transform var(--ease-pop);
+    }
+    #next-btn:hover  { transform: scale(1.06); }
+    #next-btn:active { transform: scale(.96); }
+    #next-btn.show   { display: block; animation: fadeUp .4s ease; }
+
+    /* ── Confetti ── */
+    #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+
+    /* ── Celebration ── */
+    #celebration {
+      display: none; position: fixed; inset: 0; background: rgba(255,248,240,.96);
+      z-index: 1000; flex-direction: column; align-items: center; justify-content: center;
+      gap: 18px; text-align: center; padding: 24px;
+    }
+    #celebration.show { display: flex; animation: fadeIn .5s ease; }
+
+    .celebration-emoji { font-size: 5.5rem; animation: bounce 1s ease infinite alternate; }
+    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-20px); } }
+    .celebration-title { font-size: 2.4rem; font-weight: 800; background: linear-gradient(135deg, var(--clr-purple), var(--clr-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .celebration-sub   { font-size: 1.15rem; font-weight: 600; color: #7B68C8; }
+
+    .cel-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+    .cel-btn {
+      color: #fff; border: none; border-radius: 50px; padding: 15px 30px;
+      font-family: inherit; font-size: 1.2rem; font-weight: 800; cursor: pointer;
+      transition: transform var(--ease-pop);
+    }
+    .cel-btn:hover  { transform: scale(1.07); }
+    .cel-btn:active { transform: scale(.95); }
+    .cel-btn.green  { background: linear-gradient(135deg, var(--clr-green), var(--clr-sky)); box-shadow: 0 8px 24px rgba(107,203,119,.4); }
+    .cel-btn.purple { background: linear-gradient(135deg, var(--clr-purple), var(--clr-pink)); box-shadow: 0 8px 24px rgba(155,93,229,.4); }
+
+    /* ── Match mode: letter option style ── */
+    .option-btn.is-letter { padding: 18px 6px; }
+
+    /* ── Animations ── */
+    @keyframes fadeIn  { from { opacity: 0; }           to { opacity: 1; } }
+    @keyframes fadeUp  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 420px) {
+      .options-grid { gap: 10px; }
+      .option-btn   { padding: 10px 4px; }
+      .mode-cards   { flex-direction: column; align-items: center; }
+      .mode-card    { width: 90vw; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- floating decorations -->
+<div class="deco" style="top:8%;left:5%;animation-delay:0s">⭐</div>
+<div class="deco" style="top:15%;right:8%;animation-delay:1.2s">🌈</div>
+<div class="deco" style="bottom:20%;left:3%;animation-delay:2.1s">🎈</div>
+<div class="deco" style="bottom:12%;right:6%;animation-delay:.7s">🌟</div>
+<div class="deco" style="top:45%;left:2%;animation-delay:1.8s">🎀</div>
+
+<!-- ══════════════════════════════════════════════
+     MODE SELECTION SCREEN
+═══════════════════════════════════════════════ -->
+<div id="mode-screen">
+  <div class="mode-logo">BOKSTAV 🐣</div>
+  <div class="mode-sub">Velg et spill og lær bokstavene!</div>
+
+  <div class="mode-cards">
+    <div class="mode-card active" id="mc-quiz" onclick="selectMode('quiz')">
+      <div class="mode-card-icon">🖼️</div>
+      <div class="mode-card-title">Hva starter med…?</div>
+      <div class="mode-card-desc">Se en stor bokstav, finn bildet som starter med den!</div>
+    </div>
+    <div class="mode-card" id="mc-match" onclick="selectMode('match')">
+      <div class="mode-card-icon">🔤</div>
+      <div class="mode-card-title">Match store og små</div>
+      <div class="mode-card-desc">Se den STORE bokstaven, finn den lille versjonen av den!</div>
+    </div>
+    <div class="mode-card" id="mc-find" onclick="selectMode('find')">
+      <div class="mode-card-icon">🔍</div>
+      <div class="mode-card-title">Finn bokstaven!</div>
+      <div class="mode-card-desc">Se et bilde og et ord – velg riktig stor bokstav blant tre!</div>
+    </div>
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:center; gap:10px; font-weight:800; color:#7B68C8; font-size:1.15rem; margin-top:6px;">
+    <input type="checkbox" id="level2-toggle" style="width:22px; height:22px; cursor:pointer;" />
+    <label for="level2-toggle" style="cursor:pointer;">Nivå 2: Skriv svaret (ingen alternativer)</label>
+  </div>
+
+  <button id="start-btn" onclick="launchGame()">Start spillet! 🚀</button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     GAME SCREEN
+═══════════════════════════════════════════════ -->
+<div id="app">
+  <header>
+    <div class="logo">BOKSTAV 🐣</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="mode-tag quiz" id="mode-tag">Quiz</div>
+      <div class="stars-counter"><span>⭐</span><span id="star-count">0</span></div>
+    </div>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+  </div>
+
+  <!-- Letter card: always shows BOTH Aa together (research: pair early, pair always) -->
+  <div class="letter-card">
+    <div class="instruction" id="card-instruction">Trykk på bokstavene for å høre dem! 🔊</div>
+
+    <div class="letter-pair" id="letter-pair" role="button" tabindex="0" aria-label="Hør bokstavene">
+      <div class="letter-big lc-0" id="letter-upper">A</div>
+      <div class="letter-divider"></div>
+      <div class="letter-small lc-0" id="letter-lower">a</div>
+    </div>
+
+    <div class="letter-label">
+      <span>STOR</span>
+      <span>liten</span>
+    </div>
+    <div class="speak-hint">👆 Trykk for å høre</div>
+  </div>
+
+  <div class="question" id="question">Hva starter med bokstaven A?</div>
+
+  <div class="options-grid" id="options-grid"></div>
+
+  <div class="feedback hidden" id="feedback"></div>
+
+  <button id="next-btn">Neste ➜</button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CELEBRATION SCREEN
+═══════════════════════════════════════════════ -->
+<div id="celebration">
+  <div class="celebration-emoji">🎉</div>
+  <div class="celebration-title">Kjempebra!</div>
+  <div class="celebration-sub" id="celebration-sub">Du lærte alle bokstavene!</div>
+  <div class="stars-counter" style="font-size:1.4rem;padding:12px 28px">
+    <span>⭐</span><span id="final-stars">0</span> stjerner!
+  </div>
+  <div class="cel-btns">
+    <button class="cel-btn green" id="restart-same-btn">Spill igjen! 🔄</button>
+    <button class="cel-btn purple" id="change-mode-btn">Bytt spill 🎮</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   DATA
+   Each letter:
+   - upper / lower       : both letter forms (always shown together)
+   - words[]             : 3 word options, one picked randomly per session
+                           each has { emoji, word, lure[], lureWords[] }
+   - matchLures[]        : safe lowercase distractors (visually distinct)
+   - letterLures[]       : uppercase distractors for 'find' mode
+   ═══════════════════════════════════════════════ */
+var ALL_LETTERS = [
+  {
+    upper:'A', lower:'a',
+    words:[
+      { emoji:'🐒', word:'Ape',        lure:['🍌','🐘'],   lureWords:['Banan','Elefant'] },
+      { emoji:'🍊', word:'Appelsin',   lure:['🐱','🚗'],   lureWords:['Katt','Bil'] },
+      { emoji:'🐊', word:'Alligator',  lure:['🐻','🌈'],   lureWords:['Bjørn','Regnbue'] },
+    ],
+    matchLures:['e','s'], letterLures:['E','S']
+  },
+  {
+    upper:'B', lower:'b',
+    words:[
+      { emoji:'🐻', word:'Bjørn',      lure:['🌸','🐟'],   lureWords:['Blomst','Fisk'] },
+      { emoji:'⚽', word:'Ball',        lure:['🐯','🌙'],   lureWords:['Tiger','Måne'] },
+      { emoji:'🚗', word:'Bil',         lure:['🦉','🍎'],   lureWords:['Ugle','Eple'] },
+    ],
+    matchLures:['k','m'], letterLures:['K','M']
+  },
+  {
+    upper:'D', lower:'d',
+    words:[
+      { emoji:'🐬', word:'Delfin',     lure:['🐱','🌊'],   lureWords:['Katt','Bølge'] },
+      { emoji:'🦆', word:'Due',         lure:['🐴','🍓'],   lureWords:['Hest','Jordbær'] },
+      { emoji:'🐉', word:'Drage',       lure:['🦒','⭐'],   lureWords:['Giraff','Stjerne'] },
+    ],
+    matchLures:['a','f'], letterLures:['A','F']
+  },
+  {
+    upper:'E', lower:'e',
+    words:[
+      { emoji:'🍎', word:'Eple',        lure:['🦁','🌙'],   lureWords:['Løve','Måne'] },
+      { emoji:'🐘', word:'Elefant',     lure:['🐟','🎈'],   lureWords:['Fisk','Ballong'] },
+      { emoji:'🥚', word:'Egg',         lure:['🚂','🐮'],   lureWords:['Tog','Ku'] },
+    ],
+    matchLures:['a','f'], letterLures:['A','F']
+  },
+  {
+    upper:'F', lower:'f',
+    words:[
+      { emoji:'🐟', word:'Fisk',        lure:['🐰','🌈'],   lureWords:['Kanin','Regnbue'] },
+      { emoji:'🐸', word:'Frosk',       lure:['🐯','🍦'],   lureWords:['Tiger','Is'] },
+      { emoji:'🐦', word:'Fugl',        lure:['🐻','🍊'],   lureWords:['Bjørn','Appelsin'] },
+    ],
+    matchLures:['t','e'], letterLures:['T','E']
+  },
+  {
+    upper:'G', lower:'g',
+    words:[
+      { emoji:'🦒', word:'Giraff',      lure:['🍓','🐦'],   lureWords:['Jordbær','Fugl'] },
+      { emoji:'🐷', word:'Gris',        lure:['🦉','🚗'],   lureWords:['Ugle','Bil'] },
+      { emoji:'🐐', word:'Geit',       lure:['🍎','🌙'],   lureWords:['Eple','Måne'] },
+    ],
+    matchLures:['a','k'], letterLures:['A','K']
+  },
+  {
+    upper:'H', lower:'h',
+    words:[
+      { emoji:'🐴', word:'Hest',        lure:['🌲','🐟'],   lureWords:['Tre','Fisk'] },
+      { emoji:'🐕', word:'Hund',        lure:['🐱','🌈'],   lureWords:['Katt','Regnbue'] },
+      { emoji:'❤️', word:'Hjerte',      lure:['⭐','🐻'],   lureWords:['Stjerne','Bjørn'] },
+    ],
+    matchLures:['k','m'], letterLures:['K','M']
+  },
+  {
+    upper:'I', lower:'i',
+    words:[
+      { emoji:'🍦', word:'Is',          lure:['🦋','🎺'],   lureWords:['Sommerfugl','Trompet'] },
+      { emoji:'🐻‍❄️', word:'Isbjørn', lure:['🐯','🌸'],   lureWords:['Tiger','Blomst'] },
+      { emoji:'🏠', word:'Iglo',        lure:['🐸','🦒'],   lureWords:['Frosk','Giraff'] },
+    ],
+    matchLures:['l','t'], letterLures:['L','T']
+  },
+  {
+    upper:'J', lower:'j',
+    words:[
+      { emoji:'🍓', word:'Jordbær',     lure:['🍌','🐟'],   lureWords:['Banan','Fisk'] },
+      { emoji:'🎄', word:'Juletre',     lure:['⭐','🐴'],   lureWords:['Stjerne','Hest'] },
+      { emoji:'🌍', word:'Jord',        lure:['🌙','🐻'],   lureWords:['Måne','Bjørn'] },
+    ],
+    matchLures:['i','f'], letterLures:['I','F']
+  },
+  {
+    upper:'K', lower:'k',
+    words:[
+      { emoji:'🐱', word:'Katt',        lure:['🦆','🍌'],   lureWords:['And','Banan'] },
+      { emoji:'🐄', word:'Ku',          lure:['🐴','🌈'],   lureWords:['Hest','Regnbue'] },
+      { emoji:'🐰', word:'Kanin',       lure:['🐸','☀️'],   lureWords:['Frosk','Sol'] },
+    ],
+    matchLures:['h','f'], letterLures:['H','F']
+  },
+  {
+    upper:'L', lower:'l',
+    words:[
+      { emoji:'🦁', word:'Løve',        lure:['🐙','🚂'],   lureWords:['Blekksprut','Tog'] },
+      { emoji:'🧢', word:'Lue',         lure:['🐻','🌸'],   lureWords:['Bjørn','Blomst'] },
+      { emoji:'🧅', word:'Løk',         lure:['🐱','🎈'],   lureWords:['Katt','Ballong'] },
+    ],
+    matchLures:['i','t'], letterLures:['I','T']
+  },
+  {
+    upper:'M', lower:'m',
+    words:[
+      { emoji:'🌙', word:'Måne',        lure:['🐕','🌊'],   lureWords:['Hund','Bølge'] },
+      { emoji:'🐭', word:'Mus',         lure:['🦁','🍎'],   lureWords:['Løve','Eple'] },
+      { emoji:'🥛', word:'Melk',        lure:['☀️','🐴'],   lureWords:['Sol','Hest'] },
+    ],
+    matchLures:['n','h'], letterLures:['N','H']
+  },
+  {
+    upper:'N', lower:'n',
+    words:[
+      { emoji:'🦏', word:'Neshorn',     lure:['🐸','🍊'],   lureWords:['Frosk','Appelsin'] },
+      { emoji:'🌰', word:'Nøtt',        lure:['🐱','🌈'],   lureWords:['Katt','Regnbue'] },
+      { emoji:'🔑', word:'Nøkkel',      lure:['🐻','🍦'],   lureWords:['Bjørn','Is'] },
+    ],
+    matchLures:['m','u'], letterLures:['M','U']
+  },
+  {
+    upper:'P', lower:'p',
+    words:[
+      { emoji:'🦜', word:'Papegøye',    lure:['🍇','🐸'],   lureWords:['Drue','Frosk'] },
+      { emoji:'🐧', word:'Pingvin',     lure:['🐱','🌙'],   lureWords:['Katt','Måne'] },
+      { emoji:'🐼', word:'Panda',       lure:['🦒','🍓'],   lureWords:['Giraff','Jordbær'] },
+    ],
+    matchLures:['f','k'], letterLures:['F','K']
+  },
+  {
+    upper:'R', lower:'r',
+    words:[
+      { emoji:'🌈', word:'Regnbue',     lure:['🎹','🐸'],   lureWords:['Piano','Frosk'] },
+      { emoji:'🦊', word:'Rev',         lure:['🐴','🍦'],   lureWords:['Hest','Is'] },
+      { emoji:'🚀', word:'Rakett',      lure:['🌙','🐻'],   lureWords:['Måne','Bjørn'] },
+    ],
+    matchLures:['n','a'], letterLures:['N','A']
+  },
+  {
+    upper:'S', lower:'s',
+    words:[
+      { emoji:'☀️', word:'Sol',         lure:['🐮','🎁'],   lureWords:['Ku','Gave'] },
+      { emoji:'🐑', word:'Sau',         lure:['🐯','🍌'],   lureWords:['Tiger','Banan'] },
+      { emoji:'🐍', word:'Slange',      lure:['🐕','🌸'],   lureWords:['Hund','Blomst'] },
+    ],
+    matchLures:['a','e'], letterLures:['A','E']
+  },
+  {
+    upper:'T', lower:'t',
+    words:[
+      { emoji:'🐯', word:'Tiger',       lure:['🍋','🐧'],   lureWords:['Sitron','Pingvin'] },
+      { emoji:'🚂', word:'Tog',         lure:['🐱','🍊'],   lureWords:['Katt','Appelsin'] },
+      { emoji:'🌳', word:'Tre',         lure:['🐒','🌙'],   lureWords:['Ape','Måne'] },
+    ],
+    matchLures:['f','l'], letterLures:['F','L']
+  },
+  {
+    upper:'U', lower:'u',
+    words:[
+      { emoji:'🦉', word:'Ugle',        lure:['🌷','🦀'],   lureWords:['Tulipan','Krabbe'] },
+      { emoji:'🐺', word:'Ulv',         lure:['🐘','🍓'],   lureWords:['Elefant','Jordbær'] },
+      { emoji:'🩲', word:'Underbukse',  lure:['🐻','🌊'],   lureWords:['Bjørn','Bølge'] },
+    ],
+    matchLures:['a','o'], letterLures:['A','O']
+  },
+  {
+    upper:'Æ', lower:'æ',
+    words:[
+      { emoji:'🍏', word:'Æble',        lure:['🐘','🌍'],   lureWords:['Elefant','Jord'] },
+      { emoji:'🦆', word:'Ærfugl',      lure:['🐱','🌙'],   lureWords:['Katt','Måne'] },
+      { emoji:'🎖️', word:'Ære',         lure:['🐻','🍌'],   lureWords:['Bjørn','Banan'] },
+    ],
+    matchLures:['e','ø'], letterLures:['E','Ø']
+  },
+  {
+    upper:'Ø', lower:'ø',
+    words:[
+      { emoji:'🦎', word:'Øgle',        lure:['🧸','🚂'],   lureWords:['Bamse','Tog'] },
+      { emoji:'👁️', word:'Øye',         lure:['🍎','🌸'],   lureWords:['Eple','Blomst'] },
+      { emoji:'👂', word:'Øre',         lure:['🐒','🍦'],   lureWords:['Ape','Is'] },
+    ],
+    matchLures:['o','æ'], letterLures:['O','Æ']
+  },
+  {
+    upper:'Å', lower:'å',
+    words:[
+      { emoji:'🌾', word:'Åker',        lure:['🍰','🌊'],   lureWords:['Kake','Bølge'] },
+      { emoji:'🌊', word:'Å',            lure:['🐱','⭐'],   lureWords:['Katt','Stjerne'] },
+      { emoji:'🎡', word:'Åpen',         lure:['🐸','🌙'],   lureWords:['Frosk','Måne'] },
+    ],
+    matchLures:['a','ø'], letterLures:['A','Ø']
+  },
+];
+
+// Letters shown in the game (all the clear, child-friendly ones)
+var EASY_LETTERS = ['A','B','D','E','F','G','H','I','J','K','L','M','N','P','R','S','T','U'];
+
+/* ═══════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════ */
+var gameMode   = 'quiz';  // 'quiz' | 'match' | 'find'
+var isLevel2   = false;
+var queue      = [];
+var currentIdx = 0;
+var stars      = 0;
+var answered   = false;
+var colorCount = 5;
+var autoNextTimeout = null;
+
+/* ═══════════════════════════════════════════════
+   MODE SELECTION
+   ═══════════════════════════════════════════════ */
+function selectMode(mode) {
+  gameMode = mode;
+  document.getElementById('mc-quiz').classList.toggle('active',  mode === 'quiz');
+  document.getElementById('mc-match').classList.toggle('active', mode === 'match');
+  document.getElementById('mc-find').classList.toggle('active',  mode === 'find');
+}
+
+function launchGame() {
+  var toggle = document.getElementById('level2-toggle');
+  if (toggle) isLevel2 = toggle.checked;
+  document.getElementById('mode-screen').classList.add('hidden');
+  startGame();
+}
+
+/* ═══════════════════════════════════════════════
+   SPEECH
+   ═══════════════════════════════════════════════ */
+function speak(text, rate) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = 'nb-NO'; u.rate = rate || 0.82; u.pitch = 1.1;
+  speechSynthesis.speak(u);
+}
+
+/* ═══════════════════════════════════════════════
+   SHUFFLE
+   ═══════════════════════════════════════════════ */
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/* ═══════════════════════════════════════════════
+   BUILD ROUNDS
+   Each call picks a RANDOM word option from the letter's
+   words[] array — so repeating the same letter gives a
+   different picture/word every time.
+   ═══════════════════════════════════════════════ */
+function pickWord(d) {
+  return d.words[Math.floor(Math.random() * d.words.length)];
+}
+
+function buildQuizRound(d) {
+  var w = pickWord(d);
+  return {
+    data: d, word: w, mode: 'quiz',
+    options: shuffle([
+      { emoji: w.emoji,    word: w.word,         correct: true  },
+      { emoji: w.lure[0],  word: w.lureWords[0], correct: false },
+      { emoji: w.lure[1],  word: w.lureWords[1], correct: false },
+    ])
+  };
+}
+
+function buildMatchRound(d) {
+  return {
+    data: d, word: pickWord(d), mode: 'match',
+    options: shuffle([
+      { letter: d.lower,          correct: true  },
+      { letter: d.matchLures[0],  correct: false },
+      { letter: d.matchLures[1],  correct: false },
+    ])
+  };
+}
+
+// NEW: show emoji+word, child picks the correct UPPERCASE letter
+function buildFindRound(d) {
+  var w = pickWord(d);
+  return {
+    data: d, word: w, mode: 'find',
+    options: shuffle([
+      { letter: d.upper,            word: d.upper, correct: true  },
+      { letter: d.letterLures[0],   word: d.letterLures[0], correct: false },
+      { letter: d.letterLures[1],   word: d.letterLures[1], correct: false },
+    ])
+  };
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER ROUND
+   ═══════════════════════════════════════════════ */
+function renderRound() {
+  answered = false;
+  if (autoNextTimeout) {
+    clearTimeout(autoNextTimeout);
+    autoNextTimeout = null;
+  }
+
+  var round    = queue[currentIdx];
+  var d        = round.data;
+  var w        = round.word;  // selected word for this round
+  var colorCls = 'lc-' + (currentIdx % colorCount);
+
+  // ── Letter card (always shows BOTH forms)
+  var upper = document.getElementById('letter-upper');
+  var lower = document.getElementById('letter-lower');
+
+  upper.textContent = d.upper;
+  upper.className   = 'letter-big ' + colorCls;
+
+  var newLower = lower.cloneNode(false);
+  newLower.textContent = d.lower;
+  newLower.className   = 'letter-small ' + colorCls;
+  lower.parentNode.replaceChild(newLower, lower);
+
+  // Progress bar
+  document.getElementById('progress-bar').style.width =
+    ((currentIdx / queue.length) * 100) + '%';
+
+  // Mode tag + question text
+  var tag = document.getElementById('mode-tag');
+  if (round.mode === 'match') {
+    tag.textContent = 'Match' + (isLevel2 ? ' Nivå 2' : ''); tag.className = 'mode-tag match';
+    document.getElementById('card-instruction').textContent = isLevel2 ? 'Hvilken? Skriv på tastaturet! ⌨️' : 'Trykk for å høre begge! 🔊';
+    document.getElementById('question').textContent = 'Finn den lille versjonen av ' + d.upper + ' !';
+  } else if (round.mode === 'find') {
+    tag.textContent = 'Finn' + (isLevel2 ? ' Nivå 2' : ''); tag.className = 'mode-tag find';
+    document.getElementById('card-instruction').textContent = isLevel2 ? 'Hvilken bokstav? Skriv på tastaturet! ⌨️' : 'Trykk for å høre bokstaven! 🔊';
+    document.getElementById('question').textContent = 'Hvilken bokstav starter ' + (w ? w.word : '') + '?';
+  } else {
+    tag.textContent = 'Quiz' + (isLevel2 ? ' Nivå 2' : ''); tag.className = 'mode-tag quiz';
+    document.getElementById('card-instruction').textContent = isLevel2 ? 'Skriv bokstaven på tastaturet! ⌨️' : 'Trykk for å høre dem! 🔊';
+    document.getElementById('question').textContent = 'Hva starter med bokstaven ' + d.upper + '?';
+  }
+
+  // ── Options grid
+  var grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  grid.style.display = isLevel2 ? 'none' : 'grid';
+
+  var speakHint = document.querySelector('.speak-hint');
+  if (speakHint) speakHint.textContent = isLevel2 ? '⌨️ Skriv svaret på tastaturet' : '👆 Trykk for å høre';
+
+  // In 'find' mode the letter card area shows the PICTURE instead; re-purpose it
+  var letterCard = document.getElementById('letter-pair').parentNode;
+  var findPic    = document.getElementById('find-picture');
+
+  if (round.mode === 'find') {
+    // Show the emoji+word prominently above instead of the letter pair
+    document.getElementById('letter-pair').style.display = 'none';
+    document.querySelector('.letter-label').style.display = 'none';
+    if (!findPic) {
+      findPic = document.createElement('div');
+      findPic.id = 'find-picture';
+      findPic.style.cssText = 'font-size:clamp(4rem,16vw,7rem);text-align:center;line-height:1;margin:4px 0';
+      letterCard.insertBefore(findPic, document.querySelector('.speak-hint'));
+    }
+    if (isLevel2) {
+      findPic.innerHTML = '<div style="font-size:clamp(4rem,16vw,7rem)">' + (w ? w.emoji : '') + '</div>';
+    } else {
+      findPic.innerHTML = '<div style="font-size:clamp(4rem,16vw,7rem)">' + (w ? w.emoji : '') + '</div>' +
+        '<div style="font-size:1.3rem;font-weight:800;color:#3A2D6B;margin-top:4px">' + (w ? w.word : '') + '</div>';
+    }
+    findPic.style.display = '';
+  } else {
+    document.getElementById('letter-pair').style.display = '';
+    document.querySelector('.letter-label').style.display = '';
+    if (findPic) findPic.style.display = 'none';
+  }
+
+  round.options.forEach(function(opt, i) {
+    var btn = document.createElement('button');
+    btn.id = 'opt-' + i;
+
+    if (round.mode === 'match' || round.mode === 'find') {
+      btn.className = 'option-btn is-letter';
+      btn.innerHTML = '<span class="option-letter ' + colorCls + '">' + opt.letter + '</span>';
+      btn.setAttribute('aria-label', 'Bokstav ' + opt.letter);
+    } else {
+      btn.className = 'option-btn';
+      btn.innerHTML =
+        '<span class="option-emoji">' + opt.emoji + '</span>' +
+        '<span class="option-label">' + opt.word + '</span>';
+    }
+
+    btn.addEventListener('click', function() { handleAnswer(btn, opt, d, round.mode, w); });
+    grid.appendChild(btn);
+  });
+
+  var fb = document.getElementById('feedback');
+  fb.textContent = ''; fb.className = 'feedback hidden';
+  document.getElementById('next-btn').classList.remove('show');
+
+  // Auto-speak
+  // VIKTIG: i quiz-modus si bare bokstavnavnet, IKKE ordet – det avslører svaret!
+  // I match-modus si begge formene (F – f).
+  // I finn-modus si ordet (bildet er vist, barnet skal finne bokstaven).
+  setTimeout(function() {
+    if (round.mode === 'find' && w) {
+      speak(w.word);
+    } else if (round.mode === 'match') {
+      speak(d.upper + ' – ' + d.lower);
+    } else {
+      // quiz: bare bokstavnavnet
+      speak('Bokstaven ' + d.upper);
+    }
+  }, 600);
+}
+
+/* ═══════════════════════════════════════════════
+   HANDLE ANSWER
+   ═══════════════════════════════════════════════ */
+function handleAnswer(btn, opt, d, mode, w) {
+  if (answered) return;
+  answered = true;
+  document.querySelectorAll('.option-btn').forEach(function(b) { b.disabled = true; });
+
+  var fb = document.getElementById('feedback');
+
+  if (opt.correct) {
+    btn.classList.add('correct');
+    stars++;
+    document.getElementById('star-count').textContent = stars;
+    var praise = randomPraise();
+    fb.textContent = praise;
+    fb.className   = 'feedback correct';
+
+    if (isLevel2 && mode === 'find') {
+      var fp = document.getElementById('find-picture');
+      if (fp) fp.innerHTML += '<div style="font-size:2.5rem;font-weight:800;color:var(--clr-correct);margin-top:10px;animation:correctPop .3s;">' + d.upper + ' ' + d.lower + '</div>';
+    }
+
+    if (mode === 'match') {
+      speak('Ja! Den store ' + d.upper + ' og den lille ' + d.lower + ' er samme bokstav! ' + praise);
+    } else if (mode === 'find') {
+      speak('Ja! ' + (w ? w.word : '') + ' starter med bokstaven ' + d.upper + '! ' + praise);
+    } else {
+      speak('Ja! ' + (w ? w.word : '') + ' starter med ' + d.upper + '! ' + praise);
+    }
+
+    launchConfetti(80);
+    setTimeout(function() { document.getElementById('next-btn').classList.add('show'); }, 800);
+    autoNextTimeout = setTimeout(nextRound, 3500);
+
+  } else {
+    btn.classList.add('wrong');
+    var hint;
+    if (mode === 'match') {
+      hint = 'Prøv igjen! Den lille ' + d.lower + ' hører til ' + d.upper + ' 🤔';
+    } else if (mode === 'find') {
+      hint = 'Prøv igjen! Bokstaven er ' + d.upper + ' 🤔';
+    } else {
+      hint = 'Prøv igjen! Hint: ' + (w ? w.word : '') + ' 🤔';
+    }
+    fb.textContent = hint;
+    fb.className   = 'feedback wrong';
+    speak('Nei, prøv igjen!');
+    setTimeout(function() {
+      answered = false;
+      document.querySelectorAll('.option-btn:not(.wrong)').forEach(function(b) { b.disabled = false; });
+    }, 950);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   PRAISE PHRASES
+   ═══════════════════════════════════════════════ */
+function randomPraise() {
+  var p = ['Kjempebra! 🌟', 'Hurra! ⭐', 'Wow, du er flink! 🎉', 'Riktig! 🥳', 'Supert! 🎊', 'Flott jobbet! 💪'];
+  return p[Math.floor(Math.random() * p.length)];
+}
+
+/* ═══════════════════════════════════════════════
+   NEXT BUTTON
+   ═══════════════════════════════════════════════ */
+function nextRound() {
+  if (autoNextTimeout) {
+    clearTimeout(autoNextTimeout);
+    autoNextTimeout = null;
+  }
+  currentIdx++;
+  if (currentIdx >= queue.length) {
+    showCelebration();
+  } else {
+    renderRound();
+  }
+}
+
+document.getElementById('next-btn').addEventListener('click', nextRound);
+
+/* ═══════════════════════════════════════════════
+   LETTER PAIR – click to hear
+   ═══════════════════════════════════════════════ */
+document.getElementById('letter-pair').addEventListener('click', function() {
+  var round = queue[currentIdx];
+  if (!round) return;
+  var d = round.data;
+  if (round.mode === 'match') {
+    // Match: hør begge formene
+    speak(d.upper + ' – ' + d.lower);
+  } else if (round.mode === 'find') {
+    // Find: kortet viser bildet, si ordet
+    speak(round.word ? round.word.word : d.upper);
+  } else {
+    // Quiz: si bare bokstavnavnet – ikke avsløre ordet!
+    speak('Bokstaven ' + d.upper);
+  }
+});
+document.getElementById('letter-pair').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.key === ' ') this.click();
+});
+
+/* ═══════════════════════════════════════════════
+   CELEBRATION
+   ═══════════════════════════════════════════════ */
+function showCelebration() {
+  document.getElementById('progress-bar').style.width = '100%';
+  document.getElementById('final-stars').textContent  = stars;
+  document.getElementById('celebration-sub').textContent =
+    'Du fullførte ' + queue.length + ' runder og fikk ' + stars + ' stjerner! 🏆';
+  document.getElementById('celebration').classList.add('show');
+  launchConfetti(200);
+  speak('Kjempebra! Du klarte alle rundene og fikk ' + stars + ' stjerner!');
+}
+
+document.getElementById('restart-same-btn').addEventListener('click', function() {
+  document.getElementById('celebration').classList.remove('show');
+  startGame();
+});
+
+document.getElementById('change-mode-btn').addEventListener('click', function() {
+  document.getElementById('celebration').classList.remove('show');
+  document.getElementById('mode-screen').classList.remove('hidden');
+});
+
+/* ═══════════════════════════════════════════════
+   CONFETTI
+   ═══════════════════════════════════════════════ */
+function launchConfetti(count) {
+  var canvas = document.getElementById('confetti-canvas');
+  var ctx    = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  var colors = ['#9B5DE5','#FF8FAB','#FFD93D','#6BCB77','#6EC6F5','#FF8C42'];
+  var pieces = [];
+  for (var n = 0; n < (count || 80); n++) {
+    pieces.push({
+      x: Math.random() * canvas.width, y: -10 - Math.random() * 100,
+      vx: (Math.random() - .5) * 4, vy: 2 + Math.random() * 3,
+      rot: Math.random() * 360, rotV: (Math.random() - .5) * 6,
+      size: 8 + Math.random() * 10,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      shape: Math.random() > .5 ? 'rect' : 'circle'
+    });
+  }
+  var frame;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var alive = false;
+    pieces.forEach(function(p) {
+      p.x += p.vx; p.y += p.vy; p.vy += .06; p.rot += p.rotV;
+      if (p.y < canvas.height + 20) alive = true;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(0, 1 - p.y / canvas.height);
+      if (p.shape === 'rect') { ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2); }
+      else { ctx.beginPath(); ctx.arc(0, 0, p.size/2, 0, Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+    if (alive) { frame = requestAnimationFrame(draw); }
+    else { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+  }
+  if (frame) cancelAnimationFrame(frame);
+  draw();
+}
+
+/* ═══════════════════════════════════════════════
+   START GAME
+   ═══════════════════════════════════════════════ */
+function startGame() {
+  stars = 0; currentIdx = 0;
+  document.getElementById('star-count').textContent = '0';
+  document.getElementById('progress-bar').style.width = '0%';
+
+  // Reset any find-mode leftover UI
+  var lp = document.getElementById('letter-pair');
+  if (lp) lp.style.display = '';
+  var ll = document.querySelector('.letter-label');
+  if (ll) ll.style.display = '';
+  var fp = document.getElementById('find-picture');
+  if (fp) fp.style.display = 'none';
+
+  var available = ALL_LETTERS.filter(function(l) {
+    return EASY_LETTERS.indexOf(l.upper) !== -1;
+  });
+  // Pick 10 random letters for a longer, more varied session
+  var picked = shuffle(available).slice(0, 10);
+
+  queue = picked.map(function(d) {
+    if (gameMode === 'match') return buildMatchRound(d);
+    if (gameMode === 'find')  return buildFindRound(d);
+    return buildQuizRound(d);
+  });
+
+  renderRound();
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════ */
+window.addEventListener('load', function() {
+  if (window.speechSynthesis) {
+    speechSynthesis.getVoices();
+    setTimeout(function() { speechSynthesis.getVoices(); }, 200);
+  }
+  // Show mode screen first (do NOT auto-start)
+});
+
+window.addEventListener('resize', function() {
+  var c = document.getElementById('confetti-canvas');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+});
+
+/* ═══════════════════════════════════════════════
+   KEYBOARD SUPPORT
+   ═══════════════════════════════════════════════ */
+window.addEventListener('keydown', function(e) {
+  // If next button is visible, allow Enter/Space to click it
+  var nextBtn = document.getElementById('next-btn');
+  if (nextBtn && nextBtn.classList.contains('show') && (e.key === 'Enter' || e.key === ' ')) {
+    e.preventDefault();
+    nextBtn.click();
+    return;
+  }
+
+  // Prevent input if answered, in celebration screen, or mode screen
+  if (answered) return;
+  var cel = document.getElementById('celebration');
+  if (cel && cel.classList.contains('show')) return;
+  var modeScreen = document.getElementById('mode-screen');
+  if (modeScreen && !modeScreen.classList.contains('hidden')) return;
+
+  var key = e.key.toUpperCase();
+  // Only check letters A-Z and Æ, Ø, Å
+  if (!/^[A-ZÆØÅ]$/.test(key)) return;
+
+  var round = queue[currentIdx];
+  if (!round || !round.options) return;
+
+  // Find corresponding option
+  var matchIdx = -1;
+  for (var i = 0; i < round.options.length; i++) {
+    var opt = round.options[i];
+    var optLetter = round.mode === 'quiz' ? opt.word.charAt(0).toUpperCase() : opt.letter.toUpperCase();
+    
+    if (optLetter === key) {
+      matchIdx = i;
+      break;
+    }
+  }
+
+  if (matchIdx !== -1) {
+    var btn = document.getElementById('opt-' + matchIdx);
+    if (btn && !btn.disabled) {
+      btn.click();
+    }
+  } else if (isLevel2) {
+    // If we're in Level 2 and they type a letter that isn't one of the options, it's incorrect.
+    var dummyBtn = document.createElement('button');
+    handleAnswer(dummyBtn, { correct: false, letter: key }, round.data, round.mode, round.word);
+  }
+});
+</script>
+</body>
+</html>
