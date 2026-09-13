@@ -1158,7 +1158,7 @@
         btn.className = 'option-btn is-letter';
         btn.innerHTML = '<span class="option-letter" style="color:var(--clr-purple)">' + d.upper + '</span>';
         btn.addEventListener('click', function() {
-          speak('Bokstaven ' + d.upper);
+          speak(d.upper);
           btn.style.transform = 'scale(0.9)';
           setTimeout(function() { btn.style.transform = ''; }, 150);
         });
